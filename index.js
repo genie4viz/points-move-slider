@@ -13,7 +13,7 @@ var svg = d3.select("#viz")
 
 var colorScale = d3.scaleOrdinal("schemeAccent");
 
-Promise.resolve(d3.csv("tracks.csv")).then(data => {
+Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
     data = data.sort((a, b) => Number(a.Timestamp) - Number(b.Timestamp));
     var nested = d3.nest()
         .key(d => d.Timestamp)
@@ -79,7 +79,7 @@ Promise.resolve(d3.csv("tracks.csv")).then(data => {
             if (button.text() == "Pause") {
                 moving = false;
                 clearInterval(timer);
-                timer = 0;
+                // timer = 0;
                 button.text("Play");
             } else {
                 moving = true;
@@ -106,7 +106,7 @@ Promise.resolve(d3.csv("tracks.csv")).then(data => {
 
         var plotMoment = nested.filter(d => d.key === moment)[0].values;
 
-        plot.selectAll("circle").remove();
+        // plot.selectAll("circle").remove();
         for (var i = 0; i < plotMoment.length; i++) {
             plot
                 .append("circle")
