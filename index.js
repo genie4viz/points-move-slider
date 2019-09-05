@@ -11,12 +11,13 @@ var svg = d3.select("#viz")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom);
 
-var colorScale = d3.scaleOrdinal("schemeAccent");
-
 Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
     data = data.sort((a, b) => Number(a.Timestamp) - Number(b.Timestamp));
-    var nested = d3.nest()
+    var nestedTimestamp = d3.nest()
         .key(d => d.Timestamp)
+        .entries(data);
+    var nestedID = d3.nest()
+        .key(d => d.ID)
         .entries(data);
 
     var moving = false;
@@ -24,7 +25,14 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
     var targetValue = width;
 
     var playButton = d3.select("#play-button");
-    var x_domain = Array.from(new Set(data.map(d => d.Timestamp)));
+    var x_domain = nestedTimestamp.map(d => d.key);
+    var color_domain = nestedID.map(d => d.key);
+
+    var colorRange = getRandomColors(color_domain.length);
+    console.log(colorRange)
+    var colorScale = d3.scaleOrdinal()
+        .domain(color_domain)
+        .range(colorRange);
 
     var x = d3.scaleBand()
         .domain(x_domain)
@@ -44,7 +52,7 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
     //add slider
     var slider = svg.append("g")
         .attr("class", "slider")
-        .attr("transform", `translate(${margin.left}, ${height  + 30})`);
+        .attr("transform", `translate(${margin.left}, ${height + 30})`);
 
     slider.append("line")
         .attr("class", "track")
@@ -71,8 +79,6 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
         .attr("class", "plot")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    drawPlot(x_domain[0]);
-
     playButton
         .on("click", function() {
             var button = d3.select(this);
@@ -90,12 +96,12 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
 
     function step() {
         update(x.invert(currentValue));
-        currentValue++; //= currentValue + (targetValue / 151);
+        currentValue++;
         if (currentValue > targetValue) {
             moving = false;
             currentValue = 0;
             clearInterval(timer);
-            // timer = 0;
+            timer = 0;
             playButton.text("Play");
             // console.log("Slider moving: " + moving);
         }
@@ -104,47 +110,36 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
 
     function drawPlot(moment) {
 
-        var plotMoment = nested.filter(d => d.key === moment)[0].values;
-
-        // plot.selectAll("circle").remove();
-        for (var i = 0; i < plotMoment.length; i++) {
+        var plotMoment = nestedTimestamp.filter(d => d.key === moment)[0].values;
+        plot.selectAll("circle").remove();
+        for (var pt of plotMoment) {
             plot
                 .append("circle")
-                .attr('cx', plotMoment[i].x)
-                .attr('cy', plotMoment[i].y)
-                .attr('r', 9)
-                .attr('fill', 'green');
+                .attr("cx", pt.x)
+                .attr("cy", pt.y)
+                .style("fill", () => { console.log(colorScale(pt.ID)); return colorScale(pt.ID); })
+                .attr("r", 9)
         }
+        // var locations = plot.selectAll(".location")
+        //     .data(plotMoment);
 
-
-        //     for(var i = 0; i < d.values.length; i++){
-
-        //     }
-        //     return x(Number(d.Timestamp));
-        // })
         // locations.enter()
         //     .append("circle")
         //     .attr("class", "location")
-        //     .attr("cx", function(d) {
-        //         for(var i = 0; i < d.values.length; i++){
-
-        //         }
-        //         return x(Number(d.Timestamp));
-        //     })
-        //     .attr("cy", height / 2)
-        //     .style("fill", function(d) { return d3.hsl(Number(d.Timestamp) / 1000000000, 0.8, 0.8) })
-        //     .style("stroke", function(d) { return d3.hsl(Number(d.Timestamp) / 1000000000, 0.7, 0.7) })
-        //     .style("opacity", 0.5)
-        //     .attr("r", 8);
+        //     .attr("cx", d => d.x)
+        //     .attr("cy", d => d.y)
+        //     .style("fill", d => { console.log(colorScale(d.ID)); return colorScale(d.ID); })
+        //     .attr("r", 9)
+        //     .attr("opacity", 1)
         //     // .transition()
-        //     // .duration(400)
-        //     // .attr("r", 25)
+        //     // .duration(200)
+        //     // .attr("opacity", 0)
         //     // .transition()
         //     // .attr("r", 8);
 
-        // // // if filtered dataset has less circles than already existing, remove excess
-        // // locations.exit()
-        // //     .remove();
+        // // if filtered dataset has less circles than already existing, remove excess
+        // locations.exit()
+        //     .remove();
     }
 
     function update(h) {
@@ -153,4 +148,15 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
         drawPlot(h);
     }
 
+    function getRandomColors(length) {
+        var colors = [];
+        for (var i = 0; i < length; i++) {
+            colors.push(randomColor());
+        }
+        return colors;
+    }
+
+    function randomColor() {
+        return '#' + parseInt(Math.random() * 0xffffff).toString(16)
+    }
 });
