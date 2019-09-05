@@ -29,7 +29,7 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
     var color_domain = nestedID.map(d => d.key);
 
     var colorRange = getRandomColors(color_domain.length);
-    console.log(colorRange)
+
     var colorScale = d3.scaleOrdinal()
         .domain(color_domain)
         .range(colorRange);
@@ -111,14 +111,20 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
     function drawPlot(moment) {
 
         var plotMoment = nestedTimestamp.filter(d => d.key === moment)[0].values;
-        plot.selectAll("circle").remove();
+        plot.selectAll("*").remove();
         for (var pt of plotMoment) {
             plot
                 .append("circle")
                 .attr("cx", pt.x)
                 .attr("cy", pt.y)
-                .style("fill", () => { console.log(colorScale(pt.ID)); return colorScale(pt.ID); })
+                .style("fill", colorScale(pt.ID))
                 .attr("r", 9)
+            plot
+                .append("text")
+                .attr("x", Number(pt.x) + 10)
+                .attr("y", Number(pt.y) + 5)
+                .style("stroke", colorScale(pt.ID))
+                .text(pt.ID + ":" + pt["Device Name"])
         }
         // var locations = plot.selectAll(".location")
         //     .data(plotMoment);
