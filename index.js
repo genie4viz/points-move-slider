@@ -3,7 +3,7 @@ var formatDate = d3.timeFormat("%b %Y");
 var parseDate = d3.timeParse("%m/%d/%y");
 
 var margin = { top: 50, right: 50, bottom: 0, left: 50 },
-    width = 1600 - margin.left - margin.right,
+    width = 1000 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 var svg = d3.select("#viz")
@@ -15,11 +15,12 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
     data = data.sort((a, b) => Number(a.Timestamp) - Number(b.Timestamp));
     var nestedTimestamp = d3.nest()
         .key(d => d.Timestamp)
-        .entries(data);
+        .entries(data);    
+    
     var nestedID = d3.nest()
         .key(d => d.ID)
         .entries(data);
-
+    console.log(nestedID)
     var moving = false;
     var currentValue = 0;
     var targetValue = width;
@@ -94,6 +95,7 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
             }
         })
 
+    // drawAvailablePlot(x_domain[0])
     function step() {
         update(x.invert(currentValue));
         currentValue++;
@@ -125,35 +127,57 @@ Promise.resolve(d3.csv("tatal_tracks.csv")).then(data => {
                 .attr("y", Number(pt.y) + 5)
                 .style("stroke", colorScale(pt.ID))
                 .text(pt.ID + ":" + pt["Device Name"])
-        }
-        // var locations = plot.selectAll(".location")
-        //     .data(plotMoment);
-
-        // locations.enter()
-        //     .append("circle")
-        //     .attr("class", "location")
-        //     .attr("cx", d => d.x)
-        //     .attr("cy", d => d.y)
-        //     .style("fill", d => { console.log(colorScale(d.ID)); return colorScale(d.ID); })
-        //     .attr("r", 9)
-        //     .attr("opacity", 1)
-        //     // .transition()
-        //     // .duration(200)
-        //     // .attr("opacity", 0)
-        //     // .transition()
-        //     // .attr("r", 8);
-
-        // // if filtered dataset has less circles than already existing, remove excess
-        // locations.exit()
-        //     .remove();
+        }        
     }
+
+    // function drawAvailablePlot(moment){
+
+    //     var locations = plot.selectAll(".location")
+    //         .data(nestedID);
+
+    //     locations.enter()
+    //         .append("circle")
+    //         .attr("class", "location")
+    //         .attr("cx", d => {
+    //             var current = d.values.map(v => v.Timestamp === moment);
+    //             if(current){
+    //                 return current.x;
+    //             }
+    //         })
+    //         .attr("cy", d => {
+    //             var current = d.values.map(v => v.Timestamp === moment);
+    //             if(current){
+    //                 return current.y;
+    //             }
+    //         })
+    //         .style("fill", d => colorScale(d.key))
+    //         .attr("r", 9)
+    //         .attr("opacity", d => {
+    //             var current = d.values.map(v => v.Timestamp === moment);
+    //             if(current){
+    //                 return 1;
+    //             }else{
+    //                 return 0;
+    //             }
+    //         })
+    //         // .transition()
+    //         // .duration(200)
+    //         // .attr("opacity", 0)
+    //         // .transition()
+    //         // .attr("r", 8);
+
+    //     // if filtered dataset has less circles than already existing, remove excess
+    //     locations.exit()
+    //         .remove();
+    // }
+
 
     function update(h) {
         // update position and text of label according to slider scale
         handle.attr("cx", x(h));
         drawPlot(h);
     }
-
+    
     function getRandomColors(length) {
         var colors = [];
         for (var i = 0; i < length; i++) {
